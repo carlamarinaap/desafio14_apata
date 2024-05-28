@@ -12,6 +12,8 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Cart"
+        500:
+          description: "Error interno del servidor intentando obtener los carritos."
     post:
       summary: "Crear un nuevo carrito"
       tags:
@@ -22,6 +24,8 @@ paths:
           description: "Operación exitosa. Carrito creado correctamente."
         400:
           description: "Error de validación. Datos incorrectos en la solicitud."
+        500:
+          description: "Error interno del servidor intentando crear un carrito."
 
   /api/carts/{id}:
     get:
@@ -42,6 +46,8 @@ paths:
             $ref: "#/definitions/Cart"
         404:
           description: "Carrito no encontrado. El ID proporcionado no coincide con ningún carrito."
+        500:
+          description: "Error interno del servidor intentando obtener un carrito."
 
     put:
       summary: "Actualizar un carrito por ID"
@@ -65,6 +71,8 @@ paths:
           description: "Operación exitosa. Carrito actualizado correctamente."
         404:
           description: "Carrito no encontrado. El ID proporcionado no coincide con ningún carrito."
+        500:
+          description: "Error interno del servidor intentando actualizar un carrito."
 
     delete:
       summary: "Eliminar un carrito por ID"
@@ -82,6 +90,8 @@ paths:
           description: "Operación exitosa. Carrito eliminado correctamente."
         404:
           description: "Carrito no encontrado. El ID proporcionado no coincide con ningún carrito."
+        500:
+          description: "Error interno del servidor intentando borrar un carrito."
 
 components:
   schemas:

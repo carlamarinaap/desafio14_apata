@@ -4,6 +4,7 @@ import { userService } from "./repositories/index.js";
 
 export async function verifyRole(req, res, next) {
   try {
+    console.log(req.signedCookies.jwt);
     const userId = jwt.verify(req.signedCookies.jwt, config.privateKey).id;
     if (userId === 1) {
       req.logger.INFO("Usuario autorizado");

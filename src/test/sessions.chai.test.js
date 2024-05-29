@@ -48,11 +48,13 @@ describe("Set de test de productos", () => {
     const result = await this.um.getUserByEmail(this.newUser.email);
     expect(result).to.not.be.empty;
     expect(result).to.be.an("object");
+    expect(mongoose.isValidObjectId(result._id)).to.be.true;
   });
   it("El DAO debe obtener un usuario por su id", async function () {
     const result = await this.um.getUserById(this.newUser._id);
     expect(result).to.not.be.empty;
     expect(result).to.be.an("object");
+    expect(isValidPassword("123123", result.password)).to.be.true;
   });
 
   it("El DAO debe obtener un usuario por su credenciales", async function () {

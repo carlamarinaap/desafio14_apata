@@ -70,8 +70,8 @@ describe("Set de test de productos", () => {
   });
 
   it("El DAO debe actualizar el rol a un usuario", async function () {
-    await this.um.updateRole(this.newUser.email, "admin");
+    await this.um.updateRole(this.newUser.email, "premium");
     const result = await this.um.getUserById(this.newUser._id);
-    expect(result.role).to.be.equal("admin");
+    expect(result.role).to.be.equal("premium");
   });
 });

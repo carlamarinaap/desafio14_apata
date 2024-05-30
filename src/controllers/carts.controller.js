@@ -37,9 +37,9 @@ export async function getCartById(req, res) {
 
 export async function addCart(req, res) {
   try {
-    await cm.addCart();
-    req.logger.INFO(`Se agregó un nuevo carrito`);
-    res.status(200).send("Se agregó correctamente el carrito");
+    const newCart = await cm.addCart();
+    req.logger.INFO(`Se agregó un nuevo carrito  ${newCart}`);
+    res.status(201).send(`Se agregó correctamente el carrito ${newCart}`);
   } catch (error) {
     req.logger.FATAL(error.message);
     res.status(500).send(error.message);

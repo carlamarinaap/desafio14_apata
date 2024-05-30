@@ -88,12 +88,12 @@ export async function deleteProduct(req, res) {
         res.status(200).send(`Producto eliminado`);
       } else {
         req.logger.INFO(`Usted no puede eliminar un producto que no le pertenece`);
-        res.render("/realTimeProducts");
+        res.render("realTimeProducts");
       }
     } else {
       await productService.delete(req.params.pid);
       req.logger.INFO(`Se eliminó el producto ${req.params.pid}`);
-      res.status(200).render("/realTimeProducts");
+      res.status(200).render("realTimeProducts");
     }
   } catch (error) {
     if (error instanceof NotFound) {

@@ -1,24 +1,35 @@
 import mongoose from "mongoose";
-import { expect, should } from "chai";
+import { expect } from "chai";
 import supertest from "supertest";
 import { port } from "../commander.js";
+import config from "../config/config.js";
+import jwt from "jsonwebtoken";
+import cartSchema from "../dao/models/cart.schema.js";
+
 const requester = supertest(`http://localhost:${port}`);
 
 describe("Testing de integración", () => {
+  let cookie;
+  before(async () => {
+    const res = await requester
+      .post(`/api/sessions/login`)
+      .send({ email: "last_first@mail.com", password: "456456" });
+    cookie = res.headers["set-cookie"][0];
+  });
   describe("Test del router de productos", () => {
     it("El endpoint POST /api/products debe agregar un producto", async () => {
       const mockedProduct = {
         title: "Title",
         description: "This is a description",
         price: 1000,
-        code: "code123",
+        code: "code456",
         stock: 1,
         category: "Category",
       };
-      const { statusCode, ok, _body } = await requester
+      const { statusCode, ok } = await requester
         .post(`/api/products`)
+        .set("Cookie", cookie)
         .send(mockedProduct);
-
       expect(statusCode).to.be.equal(201);
       expect(ok).to.be.true;
     });
@@ -46,47 +57,142 @@ describe("Testing de integración", () => {
       expect(result._body).to.be.an("object");
       expect(mongoose.isValidObjectId(result._body._id)).to.be.true;
     });
-    //   it("El endpoint PUT /api/products/:pid debe actualizar un producto", async () => {
-    //     const { _body } = await requester.get("/api/products").send({});
-    //     const pid = _body.payload[0]._id;
-    //     const result = await requester.get(`/api/products/${pid}`).send({
-    //       title: "Title modified",
-    //       description: "This is a description",
-    //       price: 1000,
-    //       stock: 10,
-    //       category: "Category",
-    //     });
-    //     expect(result.statusCode).to.be.equal(200);
-    //     expect(result.ok).to.be.true;
-    //     expect(result._body).to.be.an("object");
-    //     expect(mongoose.isValidObjectId(result._body._id)).to.be.true;
-    //   });
+    it("El endpoint PUT /api/products/:pid debe actualizar un producto", async () => {
+      const result = await requester.get("/api/products").send({});
+      const pid = result._body.payload[0]._id;
+      const updates = {
+        title: "Title modified",
+        description: "This is a description",
+        price: 1000,
+        stock: 10,
+        category: "Category",
+      };
+      const { statusCode, ok } = await requester
+        .put(`/api/products/${pid}`)
+        .send(updates);
+
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+    });
     it("El endpoint DELETE /api/products/:pid debe eliminar un producto", async () => {
       const { _body } = await requester.get("/api/products").send({});
       const pid = _body.payload[0]._id;
-      const result = await requester.delete(`/api/products/${pid}`).send();
+      const { statusCode, ok } = await requester
+        .delete(`/api/products/${pid}`)
+        .set("Cookie", cookie)
+        .send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
     });
-
-    //   describe("Test del router de carritos", () => {
-    //     it("El endpoint GET /api/carts debe traer todos los carritos", async () => {});
-    //     it("El endpoint GET /api/carts/:cid debe traer el carrito con el id suministrado", async () => {});
-    //     it("El endpoint GET /api/carts/:cid/purchase debe generar el ticket de compra", async () => {});
-    //     it("El endpoint POST /api/carts debe crear un carrito", async () => {});
-    //     it("El endpoint POST /api/carts/:cid/products/:pid debe agregar un producto al carrito", async () => {});
-    //     it("El endpoint DELETE /api/carts/:cid debe vaciar el carrito", async () => {});
-    //     it("El endpoint DELETE /api/carts/:cid/products/:pid debe eliminar el producto correspondiente del carrito", async () => {});
-    //     it("El endpoint PUT /api/carts/:cid debe actualizar los productos de un carrito", async () => {});
-    //     it("El endpoint PUT /api/carts/:cid/products/:pid debe actualizar la cantidad de un producto en un carrito", async () => {});
-    //   });
-
-    //   describe("Test del router de usuarios", () => {
-    //     it("El endpoint POST /api/sessions/register debe registrar un usuario", async () => {});
-    //     it("El endpoint POST /api/sessions/login debe iniciar la sesión de un usuario", async () => {});
-    //     it("El endpoint POST /api/sessions/passwordRestore debe cambiar la contraseña de un usuario", async () => {});
-    //     it("El endpoint GET /api/sessions/logout debe cerrar la sesión", async () => {});
-    //     it("El endpoint GET /api/sessions/github debe iniciar la sesión desde github", async () => {});
-    //     it("El endpoint GET /api/sessions/current debe traer la información del usuario logueado", async () => {});
-    //     it("El endpoint PUT /api/sessions/premium/:uid debe actualizar el tipo de usuario al usuario", async () => {});
-    //   });
   });
+
+  describe("Test del router de carritos", () => {
+    it("El endpoint POST /api/carts debe crear un carrito", async () => {
+      const { statusCode, ok } = await requester.post("/api/carts").send({});
+      const { _body } = await requester.get("/api/carts").send();
+      expect(statusCode).to.be.equal(201);
+      expect(ok).to.be.true;
+      expect(_body[0]).to.be.an("object");
+      expect(_body[0].products).to.be.an("array");
+      expect(mongoose.isValidObjectId(_body[0]._id)).to.be.true;
+    });
+    it("El endpoint GET /api/carts debe traer todos los carritos", async () => {
+      const { statusCode, ok, _body } = await requester.get("/api/carts").send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+      expect(_body).to.be.an("array");
+    });
+    it("El endpoint GET /api/carts/:cid debe traer el carrito con el id suministrado", async () => {
+      const result = await requester.get("/api/carts").send();
+      const cid = result._body[0]._id;
+      const { statusCode, ok, _body } = await requester.get(`/api/carts/${cid}`).send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+      expect(_body).to.be.an("object");
+      expect(mongoose.isValidObjectId(_body._id)).to.be.true;
+    });
+    // it("El endpoint GET /api/carts/:cid/purchase debe generar el ticket de compra", async () => {
+    //   const cart = await requester.get("/api/carts").send();
+    //   const cid = cart._body[0]._id;
+    //   const { statusCode, ok, _body } = await requester
+    //     .get(`/api/carts/${cid}/purchase`)
+    //     .send();
+    //   console.log(_body);
+    // });
+    it("El endpoint POST /api/carts/:cid/products/:pid debe agregar un producto al carrito", async () => {
+      const cart = await requester.get("/api/carts").send();
+      const cid = cart._body[0]._id;
+      const mockedProduct = {
+        title: "Title",
+        description: "This is a description",
+        price: 1000,
+        code: "code123",
+        stock: 1,
+        category: "Category",
+      };
+      await requester.post(`/api/products`).set("Cookie", cookie).send(mockedProduct);
+      const product = await requester.get("/api/products").send({});
+      const pid = product._body.payload[0]._id;
+      const { statusCode, ok } = await requester
+        .post(`/api/carts/${cid}/products/${pid}`)
+        .set("Cookie", cookie)
+        .send();
+      const result = await requester.get(`/api/carts/${cid}`).send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+      expect(result._body.products).length(1);
+      expect(result._body.products[0].product._id).to.be.equal(pid);
+    });
+    it("El endpoint DELETE /api/carts/:cid debe vaciar el carrito", async () => {
+      const cart = await requester.get("/api/carts").send();
+      const cid = cart._body[0]._id;
+      await requester.delete(`/api/carts/${cid}`).send();
+      const { statusCode, ok, _body } = await requester.get(`/api/carts/${cid}`).send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+      expect(_body.products).length(0);
+    });
+    it("El endpoint DELETE /api/carts/:cid/products/:pid debe eliminar el producto correspondiente del carrito", async () => {
+      const cart = await requester.get("/api/carts").send();
+      const cid = cart._body[0]._id;
+      const mockedProduct = {
+        title: "Title",
+        description: "This is a description",
+        price: 1000,
+        code: "code789",
+        stock: 1,
+        category: "Category",
+      };
+      await requester.post(`/api/products`).set("Cookie", cookie).send(mockedProduct);
+      const product = await requester.get("/api/products").send({});
+      const pid = product._body.payload[0]._id;
+      await requester.delete(`/api/carts/${cid}/products/${pid}`).send();
+      const { statusCode, ok, _body } = await requester.get(`/api/carts/${cid}`).send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+      expect(_body.products).length(0);
+    });
+    it("El endpoint PUT /api/carts/:cid debe actualizar los productos de un carrito", async () => {
+      const cart = await requester.get("/api/carts").send();
+      const cid = cart._body[0]._id;
+      const product = await requester.get("/api/products").send({});
+      const pid = product._body.payload[0]._id;
+      await requester.put(`/api/carts/${cid}`).send([{ product: pid, quantity: 10 }]);
+      const { statusCode, ok, _body } = await requester.get(`/api/carts/${cid}`).send();
+      expect(statusCode).to.be.equal(200);
+      expect(ok).to.be.true;
+      expect(_body.products).length(1);
+      expect(_body.products[0].quantity).to.be.equal(10);
+    });
+    //     it("El endpoint PUT /api/carts/:cid/products/:pid debe actualizar la cantidad de un producto en un carrito", async () => {});
+  });
+
+  //   describe("Test del router de usuarios", () => {
+  //     it("El endpoint POST /api/sessions/register debe registrar un usuario", async () => {});
+  //     it("El endpoint POST /api/sessions/login debe iniciar la sesión de un usuario", async () => {});
+  //     it("El endpoint POST /api/sessions/passwordRestore debe cambiar la contraseña de un usuario", async () => {});
+  //     it("El endpoint GET /api/sessions/logout debe cerrar la sesión", async () => {});
+  //     it("El endpoint GET /api/sessions/github debe iniciar la sesión desde github", async () => {});
+  //     it("El endpoint GET /api/sessions/current debe traer la información del usuario logueado", async () => {});
+  //     it("El endpoint PUT /api/sessions/premium/:uid debe actualizar el tipo de usuario al usuario", async () => {});
 });

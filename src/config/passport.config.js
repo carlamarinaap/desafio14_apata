@@ -101,14 +101,13 @@ const initializePassport = () => {
           return done("Las contraseñas no coinciden", false);
         }
         const newCart = await cm.addCart();
-
         const user = {
           first_name,
           last_name,
           age,
           email: username,
           password,
-          cart: newCart[0]._id,
+          cart: newCart._id,
         };
         await userService.add(user);
         let addUser = await userService.getByEmail(user.email);

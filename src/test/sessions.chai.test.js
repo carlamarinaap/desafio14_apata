@@ -21,7 +21,7 @@ describe("Set de test de productos", () => {
       email: "first_last@mail.com",
       age: 18,
       password: "123123",
-      role: "user",
+      role: "premium",
       cart: this.newCart._id,
     };
     this.newUser = await this.um.addUser({

@@ -18,7 +18,7 @@ export async function register(req, res, next) {
         httpOnly: true,
         maxAge: 1000 * 60 * 60,
       });
-      res.redirect("/products");
+      res.render("products");
     } catch (error) {
       req.logger.ERROR(error.message);
       next(error);
@@ -43,7 +43,7 @@ export async function login(req, res, next) {
           httpOnly: true,
           maxAge: 1000 * 60 * 60,
         })
-        .redirect("/products");
+        .render("products");
     } catch (error) {
       req.logger.ERROR(error.message);
       next(error);

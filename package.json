@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "mocha ./src/test/supertest.test.js",
+    "test": "mocha ./src/test",
     "dev": "nodemon ./src/app.js -p 8080 --mode development",
     "devTest": "nodemon ./src/app.js -p 8080 --mode devTest",
     "prod": "nodemon ./src/app.js -p 8080 --mode production"

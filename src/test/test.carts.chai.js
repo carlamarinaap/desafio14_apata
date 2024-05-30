@@ -11,7 +11,7 @@ describe("Set de test de carritos", () => {
   before(async function () {
     mongoose.connection.collections.carts.drop();
     mongoose.connection.collections.products.drop();
-
+    mongoose.connection.collections.users.drop();
     this.cm = new CartsManager();
     this.pm = new ProductManager();
     this.newCart = await this.cm.addCart();

@@ -9,13 +9,12 @@ mongoose.connect(
 describe("Set de test de productos", () => {
   before(async function () {
     mongoose.connection.collections.products.drop();
-
     this.pm = new ProductManager();
     this.mockedProduct = {
       title: "Title",
       description: "This is a description",
       price: 1000,
-      code: "code123",
+      code: "asdasd",
       stock: 1,
       category: "Category",
       status: true,
@@ -25,6 +24,7 @@ describe("Set de test de productos", () => {
   beforeEach(function () {
     this.timeout(5000);
   });
+
   it("El DAO debe obtener todos los productos", async function () {
     const result = await this.pm.getProducts({});
     expect(result).to.have.property("totalDocs").to.be.a("number");

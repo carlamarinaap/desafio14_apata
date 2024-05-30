@@ -8,12 +8,13 @@ mongoose.connect(
   "mongodb+srv://carlaapata:Facundo1990@cluster0.ppztezy.mongodb.net/test?retryWrites=true&w=majority"
 );
 
-describe("Set de test de productos", () => {
+describe("Set de test de sesiones", () => {
   before(async function () {
     this.um = new UserManager();
     this.cm = new CartManager();
     mongoose.connection.collections.users.drop();
     mongoose.connection.collections.carts.drop();
+    mongoose.connection.collections.products.drop();
     this.newCart = await this.cm.addCart();
     this.mockedUser = {
       first_name: "First Name",
